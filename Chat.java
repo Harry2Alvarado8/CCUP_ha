@@ -8,6 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -15,6 +17,9 @@ import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -30,38 +35,41 @@ import javax.swing.JTextPane;
  * @author WorkStation-Hackrry
  *
  */
+
 public class Chat {
 	public static void main(String []z){
-		marco m = new marco("Chat Room");
+		marco m = new marco("Chat de Harry");
 		m.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 }
 
 class marco extends JFrame implements Runnable{
 	/**
-	 * la version serial es 28
+	 * la versión serial es 28
 	 */
 	private static final long serialVersionUID = 28;
+	private static String ipServer = "192.168.1.37";
+	private String nombre, textoCapturado_jtfChEs, contText= "";
+	private byte l=0;
 	private JButton jbSend,jbQuit;
 	private JPanel lamBotones,jp_bl_PantallaChat;
 	private JTextField jtfChatEscribo;
 	private JTextPane jtpChatLeer;
 	private JScrollPane jspChatLeer;
+	private JPanel jpNorth;
 	private JComboBox<String> jcbAmigosOnline = new JComboBox<String>();
 	private Thread thread_EnviaMensaje;
-	private String nombre;
-	//------------para los eventos------------------
-	private String textoCapturado_jtfChEs, contText= "";
-	private byte l=0;
+	private HashMap<String, String> hmListaUsuarios = new HashMap<String, String>();
 	private Mensaje mensajeEnviar;
-	//----------------------------------------------
-
-	private JPanel jpNorth;
 	
 	public marco(String title){
 		super(title);
 		//pedimos un nombre
 		nombre = JOptionPane.showInputDialog("Dime tu Nombre");
+		
+		if(nombre.equals("")||nombre.equals(null)) System.exit(0);
+		
+		addWindowListener(new EventoEnLinea());
 		
 		setLayout(new BorderLayout());
 		setBounds(500,150,450,300);
@@ -71,18 +79,11 @@ class marco extends JFrame implements Runnable{
 		thread_EnviaMensaje = new Thread(this);
 		//lo iniciamos inmediatamente 
 		thread_EnviaMensaje.start();
-		
+			
 		jpNorth = new JPanel(new GridLayout(1,2,5,5));
 		
-		// indicamos algunas ip (en las maquinas que vamos a usar)
-		jcbAmigosOnline.addItem("192.168.1.33");
-		jcbAmigosOnline.addItem("192.168.1.34");
-		jcbAmigosOnline.addItem("192.168.1.35");
-		jcbAmigosOnline.addItem("192.168.1.36");
-		jcbAmigosOnline.addItem("192.168.1.37");
-		
 		//nombre que va a identificar a un usuario
-		jpNorth.add(new JLabel(":> "+nombre));
+		jpNorth.add(new JLabel(" " + nombre));
 		
 		jpNorth.add(jcbAmigosOnline);
 		
@@ -133,6 +134,7 @@ class marco extends JFrame implements Runnable{
 		
 	}
 	
+	
 	private boolean checkTextVacio(String texto){
 		if(texto == null || texto.equalsIgnoreCase("")){
 			return false;
@@ -157,7 +159,7 @@ class marco extends JFrame implements Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		Socket socketChat;
+		Socket socketChatIPRemota;
 		ServerSocket serverSChat;
 		try {
 			// bucle infinito para que siempre este recibiendo los mensajes
@@ -165,21 +167,31 @@ class marco extends JFrame implements Runnable{
 				// iniciamos un ServerSocket con el puerto indicado para su escucha
 				serverSChat = new ServerSocket(2882);
 				// acceptamos esa conexion y se la pasamos a un Socket
-				socketChat = serverSChat.accept();
+				socketChatIPRemota = serverSChat.accept();
 				//creamos un flujo de entrada y al constructor
-				ObjectInputStream oosRecibo = new ObjectInputStream(socketChat.getInputStream());
+				ObjectInputStream oosRecibo = new ObjectInputStream(socketChatIPRemota.getInputStream());
 				Mensaje mensajeDestinatario = (Mensaje) oosRecibo.readObject();
 				
 				//cerramos todos los distintos flujos
 				oosRecibo.close();
-				socketChat.close();
+				socketChatIPRemota.close();
 				serverSChat.close();
 				
-				System.out.println(mensajeDestinatario.getNombre()+" : "+mensajeDestinatario.getMensaje());
+				hmListaUsuarios = mensajeDestinatario.getUsuario();
 				
-				textoCapturado_jtfChEs = mensajeDestinatario.getNombre()+" : "+mensajeDestinatario.getMensaje();
-				concatena(checkTextVacio(textoCapturado_jtfChEs));
-
+				jcbAmigosOnline.removeAllItems();
+				
+				for(String nombres: mensajeDestinatario.getListaNombres())
+					jcbAmigosOnline.addItem(nombres);
+									
+				jcbAmigosOnline.removeItem(nombre);
+				
+				System.out.println(mensajeDestinatario.getNombre()+" : "+mensajeDestinatario.getMensaje());
+				if(checkTextVacio(mensajeDestinatario.getMensaje())){
+					textoCapturado_jtfChEs = mensajeDestinatario.getNombre()+" : "+mensajeDestinatario.getMensaje();
+					concatena(checkTextVacio(textoCapturado_jtfChEs));
+				}
+				
 			}
 			
 		} catch (IOException | ClassNotFoundException e) {
@@ -197,11 +209,21 @@ class marco extends JFrame implements Runnable{
 		jtfChatEscribo.setText("");	
 		concatena(checkTextVacio(textoCapturado_jtfChEs));
 		
-		mensajeEnviar = new Mensaje(nombre,textoCapturado_jtfChEs,jcbAmigosOnline.getSelectedItem().toString());
 		try {
 			//se crea la conexion con la direccion ip y puerto
 			//esto es para conectarnos con el servidor
-			Socket socketChat = new Socket("192.168.1.34",2828);
+			Socket socketChat = new Socket(ipServer,2828);
+			
+			String ipDestino = null;
+			
+			for(Map.Entry<String, String> ipDesti: hmListaUsuarios.entrySet()){
+				if(ipDesti.getValue().equalsIgnoreCase(hmListaUsuarios.get(jcbAmigosOnline.getSelectedItem()))){
+					ipDestino = hmListaUsuarios.get(jcbAmigosOnline.getSelectedItem());
+				}
+				
+			}
+			
+			mensajeEnviar = new Mensaje(nombre,textoCapturado_jtfChEs,ipDestino,null);
 			
 			ObjectOutputStream oosEnvio = new ObjectOutputStream(socketChat.getOutputStream());
 			//escribimos el siguiente objeto "mensajeEnviar" (sin comilla)
@@ -222,17 +244,32 @@ class marco extends JFrame implements Runnable{
 		}
 	}
 	
+	private void estadoConexion(String esta){
+		Socket socketChat;
+		try {
+			socketChat = new Socket(ipServer,2828);
+			mensajeEnviar = new Mensaje(nombre,esta,null);
+			ObjectOutputStream oosEnvio = new ObjectOutputStream(socketChat.getOutputStream());
+			oosEnvio.writeObject(mensajeEnviar);
+			oosEnvio.close();
+			socketChat.close();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}	
+	}
 	
 	private class AccionBotonesTeclados extends KeyAdapter implements ActionListener{
 
 		public void keyPressed(KeyEvent e) {
 			// TODO Auto-generated method stub
 			if(e.getKeyCode() == 10){
-				
 				unoSolo();
 				
 			}else if(e.getKeyCode() == 27){
+				estadoConexion("Desconectado");
 				System.exit(0);
+				
 			}
 		}
 
@@ -243,27 +280,66 @@ class marco extends JFrame implements Runnable{
 				unoSolo();
 				
 			}else if(e.getActionCommand().equalsIgnoreCase(jbQuit.getText())){
+				estadoConexion("Desconectado");
 				System.exit(0);
+				
 			}
+		}
+	}
+	
+	private class EventoEnLinea extends WindowAdapter{
+		public void windowOpened(WindowEvent e){
+			estadoConexion("Conectado");
+			
+		}
+		
+		public void windowClosing(WindowEvent e){
+			estadoConexion("Desconectado");
+			
 		}
 		
 	}
 	
-}
-      
+}      
 
 class Mensaje implements Serializable{
 	
 	private static final long serialVersionUID = 28;
-	private String nombre, destinatario, mensaje;
-
-	public Mensaje(String nombre, String text, String selectedItem) {
-		// TODO Auto-generated constructor stub
-		this.nombre = nombre;
-		mensaje = text;
-		destinatario = selectedItem;
+	private String nombre, destinatario, mensaje, miIP;
+	private ArrayList<String> ListaIPs,nombres;
+	private HashMap<String, String> usuario;
+	
+	public Mensaje(){	
 	}
+	
+	public Mensaje(String nombre, String mensaje, String selectedItem){
+		this(nombre,mensaje,selectedItem,"1.1.1.1");	
+	}
+	
+	public Mensaje(String nombre, String mensaje, String selectedItem,String miIP) {
+		// TODO Auto-generated constructor stub
+		this(nombre,mensaje,selectedItem,miIP,null);		
+	}
+	
+	public Mensaje(String nombre, String mensaje, String selectedItem,String miIP, ArrayList<String> IPs) {
+		// TODO Auto-generated constructor stub
+		setNombre(nombre);
+		this.nombre = getNombre();
+		
+		setMensaje(mensaje);
+		this.mensaje = getMensaje();
+		
+		setDestinatario(selectedItem);
+		destinatario = getDestinatario();
+		
+		setMiIP(miIP);
+		this.miIP = getMiIP();
+		
+		setListaIPs(IPs);
+		this.ListaIPs = getListaIPs();
 
+	}
+	
 	public String getNombre() {
 		return nombre;
 	}
@@ -287,5 +363,37 @@ class Mensaje implements Serializable{
 	public void setMensaje(String mensaje) {
 		this.mensaje = mensaje;
 	}
+
+	public String getMiIP() {
+		return miIP;
+	}
+
+	public void setMiIP(String miIP) {
+		this.miIP = miIP;
+	}
+
+	public ArrayList<String> getListaIPs() {
+		return ListaIPs;
+	}
+
+	public void setListaIPs(ArrayList<String> IPs) {
+		ListaIPs = IPs;
+	}
+
+	public ArrayList<String> getListaNombres() {
+		return nombres;
+	}
+
+	public void setListaNombres(ArrayList<String> nombres) {
+		this.nombres = nombres;
+	}
+	
+	public HashMap<String, String> getUsuario() {
+		return usuario;
+	}
+
+	public void setUsuario(HashMap<String, String> usuario) {
+		this.usuario = usuario;
+	}
+
 }
-            
