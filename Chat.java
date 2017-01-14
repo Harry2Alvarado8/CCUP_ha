@@ -25,6 +25,8 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -48,7 +50,7 @@ class marco extends JFrame implements Runnable{
 	 * la versión serial es 28
 	 */
 	private static final long serialVersionUID = 28;
-	private static String ipServer = "192.168.1.37";
+	private static String ipServer = "192.168.1.33";
 	private String nombre, textoCapturado_jtfChEs, contText= "";
 	private byte l=0;
 	private JButton jbSend,jbQuit;
@@ -57,16 +59,15 @@ class marco extends JFrame implements Runnable{
 	private JTextPane jtpChatLeer;
 	private JScrollPane jspChatLeer;
 	private JPanel jpNorth;
-	private JComboBox<String> jcbAmigosOnline = new JComboBox<String>();
+	private JComboBox<String> jcbAmigosEnLine = new JComboBox<String>();
 	private Thread thread_EnviaMensaje;
 	private HashMap<String, String> hmListaUsuarios = new HashMap<String, String>();
 	private Mensaje mensajeEnviar;
 	
-	public marco(String title){
-		super(title);
+	public marco(String titulo){
+		super(titulo);
 		//pedimos un nombre
 		nombre = JOptionPane.showInputDialog("Dime tu Nombre");
-		
 		if(nombre.equals("")||nombre.equals(null)) System.exit(0);
 		
 		addWindowListener(new EventoEnLinea());
@@ -79,24 +80,45 @@ class marco extends JFrame implements Runnable{
 		thread_EnviaMensaje = new Thread(this);
 		//lo iniciamos inmediatamente 
 		thread_EnviaMensaje.start();
-			
-		jpNorth = new JPanel(new GridLayout(1,2,5,5));
+
+		addNorth_MenuBar(nombre);
+		addDisplay();
+		addEast_Boton();
+		setVisible(true);
+	}
+	
+	private void addNorth_MenuBar(String nombre){
+		jpNorth = new JPanel(new BorderLayout());
 		
-		//nombre que va a identificar a un usuario
-		jpNorth.add(new JLabel(" " + nombre));
+		jpNorth.add(new JLabel("|   " + nombre + "   |"),BorderLayout.WEST);
 		
-		jpNorth.add(jcbAmigosOnline);
+		JMenuBar jmbMenu = new JMenuBar();
+		JMenu jmConfiguraciones = new JMenu("Ajustes");
+		
+		JMenu jmContactos = new JMenu("Contacto");
+		JMenu jmEstilos = new JMenu("Estilos");
+		
+		JMenu jmLetras = new JMenu("Letra");
+		JMenu jmBotones = new JMenu("Botones");
+		
+		jmEstilos.add(jmLetras);
+		jmEstilos.add(jmBotones);
+		
+		jmConfiguraciones.add(jmContactos);
+		jmConfiguraciones.add(jmEstilos);
+		
+		jmbMenu.add(jmConfiguraciones);
+		
+		jpNorth.add(jmbMenu, BorderLayout.EAST);
+		jpNorth.add(jcbAmigosEnLine,BorderLayout.CENTER);
 		
 		add(jpNorth,BorderLayout.NORTH);
-		addDisplay();
-		addBoton();
-		setVisible(true);
 	}
 	
 	/**
 	 * Metodo que tendra que ver con los botones 
 	 */
-	private void addBoton(){
+	private void addEast_Boton(){
 		lamBotones = new JPanel(new GridLayout(2,1,10,10));
 		
 		jbSend = new JButton("Send");
@@ -133,6 +155,7 @@ class marco extends JFrame implements Runnable{
 		add(jp_bl_PantallaChat,BorderLayout.CENTER);
 		
 	}
+	
 	
 	
 	private boolean checkTextVacio(String texto){
@@ -179,12 +202,12 @@ class marco extends JFrame implements Runnable{
 				
 				hmListaUsuarios = mensajeDestinatario.getUsuario();
 				
-				jcbAmigosOnline.removeAllItems();
+				jcbAmigosEnLine.removeAllItems();
 				
 				for(String nombres: mensajeDestinatario.getListaNombres())
-					jcbAmigosOnline.addItem(nombres);
+					jcbAmigosEnLine.addItem(nombres);
 									
-				jcbAmigosOnline.removeItem(nombre);
+				jcbAmigosEnLine.removeItem(nombre);
 				
 				System.out.println(mensajeDestinatario.getNombre()+" : "+mensajeDestinatario.getMensaje());
 				if(checkTextVacio(mensajeDestinatario.getMensaje())){
@@ -217,8 +240,8 @@ class marco extends JFrame implements Runnable{
 			String ipDestino = null;
 			
 			for(Map.Entry<String, String> ipDesti: hmListaUsuarios.entrySet()){
-				if(ipDesti.getValue().equalsIgnoreCase(hmListaUsuarios.get(jcbAmigosOnline.getSelectedItem()))){
-					ipDestino = hmListaUsuarios.get(jcbAmigosOnline.getSelectedItem());
+				if(ipDesti.getValue().equalsIgnoreCase(hmListaUsuarios.get(jcbAmigosEnLine.getSelectedItem()))){
+					ipDestino = hmListaUsuarios.get(jcbAmigosEnLine.getSelectedItem());
 				}
 				
 			}
