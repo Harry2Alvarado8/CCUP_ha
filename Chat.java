@@ -3,7 +3,6 @@ package chatHarry;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -24,12 +23,13 @@ import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 
@@ -53,8 +53,9 @@ class marco extends JFrame implements Runnable{
 	private static String ipServer = "192.168.1.33";
 	private String nombre, textoCapturado_jtfChEs, contText= "";
 	private byte l=0;
-	private JButton jbSend,jbQuit;
-	private JPanel lamBotones,jp_bl_PantallaChat;
+	private JButton jbEnviar,jbSalir;
+	private JPanel jpConectadosSalir,jp_bl_PantallaChat;
+	private JTextArea jtaPantUsuaConectados;
 	private JTextField jtfChatEscribo;
 	private JTextPane jtpChatLeer;
 	private JScrollPane jspChatLeer;
@@ -82,15 +83,22 @@ class marco extends JFrame implements Runnable{
 		thread_EnviaMensaje.start();
 
 		addNorth_MenuBar(nombre);
-		addDisplay();
-		addEast_Boton();
+		addCenter_Pantalla();
+		addEast_Botones();
 		setVisible(true);
 	}
 	
 	private void addNorth_MenuBar(String nombre){
 		jpNorth = new JPanel(new BorderLayout());
 		
-		jpNorth.add(new JLabel("|   " + nombre + "   |"),BorderLayout.WEST);
+		JMenuBar jmbNombre = new JMenuBar();
+		JMenu jmNombre = new JMenu("|   " + nombre + "   |");
+		JMenuItem jmiDesconectar = new JMenuItem("Desconectar");
+		jmiDesconectar.addActionListener(new AccionBotonesTeclados());
+		jmNombre.add(jmiDesconectar);
+		jmbNombre.add(jmNombre);
+		
+		jpNorth.add(jmbNombre,BorderLayout.WEST);
 		
 		JMenuBar jmbMenu = new JMenuBar();
 		JMenu jmConfiguraciones = new JMenu("Ajustes");
@@ -118,45 +126,55 @@ class marco extends JFrame implements Runnable{
 	/**
 	 * Metodo que tendra que ver con los botones 
 	 */
-	private void addEast_Boton(){
-		lamBotones = new JPanel(new GridLayout(2,1,10,10));
+	private void addEast_Botones(){
+		jpConectadosSalir = new JPanel(new BorderLayout());
+		jtaPantUsuaConectados = new JTextArea();
 		
-		jbSend = new JButton("Send");
-		jbQuit = new JButton("Quit");
+		jbSalir = new JButton("Desconectar");
 		
-		lamBotones.add(jbSend);
-		lamBotones.add(jbQuit);
+		jpConectadosSalir.add(jtaPantUsuaConectados, BorderLayout.CENTER);
+		jpConectadosSalir.add(jbSalir, BorderLayout.SOUTH);
 		
-		jbSend.addActionListener(new AccionBotonesTeclados());
-		jbQuit.addActionListener(new AccionBotonesTeclados());
+		jbSalir.addActionListener(new AccionBotonesTeclados());
 		
-		this.getContentPane().add(lamBotones,BorderLayout.EAST);
+		this.getContentPane().add(jpConectadosSalir,BorderLayout.EAST);
 	}
 	
 	/**Aqui simplemente nos encargamos de 
 	 * las pantralla de los mensajes de chat
 	 */
-	private void addDisplay(){
+	private void addCenter_Pantalla(){
 		jp_bl_PantallaChat = new JPanel(new BorderLayout());
+		JPanel jpChatEscribirEnviar = new JPanel(new BorderLayout());
 		
-		jtfChatEscribo = new JTextField();
 		jtpChatLeer = new JTextPane();
 		jspChatLeer = new JScrollPane(jtpChatLeer);
 		
+		jtfChatEscribo = new JTextField();
 		jtfChatEscribo.addKeyListener(new AccionBotonesTeclados());
 		jtfChatEscribo.setBackground(Color.YELLOW);
 		
 		jtpChatLeer.setEditable(false);
 		jspChatLeer.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		
-		jp_bl_PantallaChat.add(jspChatLeer,BorderLayout.CENTER);
-		jp_bl_PantallaChat.add(jtfChatEscribo,BorderLayout.SOUTH);
+		jbEnviar = new JButton("Enviar");
+		
+		jpChatEscribirEnviar.add(jtfChatEscribo, BorderLayout.CENTER);
+		jpChatEscribirEnviar.add(jbEnviar, BorderLayout.EAST);
+		
+		jbEnviar.addActionListener(new AccionBotonesTeclados());
+
+		jp_bl_PantallaChat.add(jspChatLeer, BorderLayout.CENTER);
+		jp_bl_PantallaChat.add(jpChatEscribirEnviar, BorderLayout.SOUTH);
 	
 		add(jp_bl_PantallaChat,BorderLayout.CENTER);
 		
 	}
 	
-	
+	@SuppressWarnings("unused")
+	private void addSouth_BarraChat(){
+		
+	}
 	
 	private boolean checkTextVacio(String texto){
 		if(texto == null || texto.equalsIgnoreCase("")){
@@ -211,8 +229,16 @@ class marco extends JFrame implements Runnable{
 				
 				System.out.println(mensajeDestinatario.getNombre()+" : "+mensajeDestinatario.getMensaje());
 				if(checkTextVacio(mensajeDestinatario.getMensaje())){
-					textoCapturado_jtfChEs = mensajeDestinatario.getNombre()+" : "+mensajeDestinatario.getMensaje();
-					concatena(checkTextVacio(textoCapturado_jtfChEs));
+					if(mensajeDestinatario.getMensaje().equalsIgnoreCase("Conectado") || 
+							mensajeDestinatario.getMensaje().equalsIgnoreCase("Desconectado")){
+						String str = mensajeDestinatario.getNombre()+" : "+mensajeDestinatario.getMensaje();
+						jtaPantUsuaConectados.append(str + "\n");
+						
+					}else{
+						textoCapturado_jtfChEs = mensajeDestinatario.getNombre()+" : "+mensajeDestinatario.getMensaje();
+						concatena(checkTextVacio(textoCapturado_jtfChEs));
+					}
+					
 				}
 				
 			}
@@ -299,10 +325,10 @@ class marco extends JFrame implements Runnable{
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			// TODO Auto-generated method stub
-			if(e.getSource() == jbSend){
+			if(e.getSource() == jbEnviar){
 				unoSolo();
 				
-			}else if(e.getActionCommand().equalsIgnoreCase(jbQuit.getText())){
+			}else if(e.getActionCommand().equalsIgnoreCase(jbSalir.getText())){
 				estadoConexion("Desconectado");
 				System.exit(0);
 				
