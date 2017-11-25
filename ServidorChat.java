@@ -8,9 +8,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.rmi.server.SocketSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -23,51 +25,27 @@ import javax.swing.JTextField;
  *
  */
 
-public class ServidorChat extends JFrame implements Runnable, ActionListener{
+public class ServidorChat implements Runnable{
 
 	private static final long serialVersionUID = 28;
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		ServidorChat p = new ServidorChat("Servidor Chat");
-		p.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
-	
-	private JTextArea jtChat = new JTextArea();
-	private JScrollPane jspTextChat;
+
 	private JTextField jtfPort;
 	private JButton jbPort;
 	private ServerSocket serverS_SC;
 	private Thread Thread_Principal;
 	
 	public ServidorChat(String title){
-		super(title);
-		setBounds(200,300,360,200);
+		System.out.println("El servidor se ha ejecutado...");
 		Thread_Principal = new Thread(this);
 		Thread_Principal.start();
-		
-		verPuerto();
-		jtChat.setEditable(false);
-		jspTextChat = new JScrollPane(jtChat);
-		add(jspTextChat,BorderLayout.CENTER);
-		setVisible(true);
+		System.out.println("Los Hilos se han ejecutados");
+
 	}
-	
-	private void verPuerto(){
-		JPanel jpNorth = new JPanel();
-		jtfPort = new JTextField(4);
-		
-		jtfPort.setEditable(false);
-		jbPort = new JButton("Ver Puerto");
-		jbPort.setEnabled(false);
-		jbPort.addActionListener(this);
-		
-		jpNorth.add(jbPort);
-		jpNorth.add(jtfPort); 
-		
-		add(jpNorth,BorderLayout.NORTH);
-	}
-	
 	
 	/* (non-Javadoc)
 	 * @see java.lang.Runnable#run()
@@ -94,18 +72,15 @@ public class ServidorChat extends JFrame implements Runnable, ActionListener{
 				socket_SC.close();
 				serverS_SC.close();
 				
-				jbPort.setEnabled(true);
-				
 				String ipRemota = socket_SC.getInetAddress().getHostAddress();
 				//----me indica la ip remota------
 				mensajeRecibido.setMiIP(ipRemota);	
 				
 				
-				
 				if(mensajeRecibido.getMensaje().equalsIgnoreCase("Conectado")){
 					cortoMensaje = "Se a "+ mensajeRecibido.getMensaje() + " " +mensajeRecibido.getNombre()+
 							" (IP:"+mensajeRecibido.getMiIP()+")";
-					
+					System.out.println(cortoMensaje);
 					alListaIp.add(ipRemota);
 					alListaNombres.add(mensajeRecibido.getNombre());
 					
@@ -130,9 +105,11 @@ public class ServidorChat extends JFrame implements Runnable, ActionListener{
 					}
 					
 				}else if(mensajeRecibido.getMensaje().equalsIgnoreCase("Desconectado")){
+					
 					cortoMensaje = "Se a "+ mensajeRecibido.getMensaje() + " " +mensajeRecibido.getNombre()+
 							" (IP:"+mensajeRecibido.getMiIP()+")";
 					
+					System.out.println(cortoMensaje);
 					alListaIp.remove(ipRemota);
 					alListaNombres.remove(mensajeRecibido.getNombre());
 					hmListaUsuarios.remove(mensajeRecibido.getNombre());	
@@ -170,10 +147,10 @@ public class ServidorChat extends JFrame implements Runnable, ActionListener{
 						socketReenvio.close();
 
 					cortoMensaje = mensajeRecibido.getNombre()+" para "+mensajeRecibido.getDestinatario()+" : "+mensajeRecibido.getMensaje();
-
+					System.out.println(cortoMensaje);
 				}
 				if(!(mensajeRecibido.getMensaje() == null || mensajeRecibido.getMensaje().equalsIgnoreCase(""))){
-					jtChat.setText( jtChat.getText()+"\n" +cortoMensaje);
+					System.out.println("\n" +cortoMensaje);
 				}
 				
 				
@@ -187,14 +164,6 @@ public class ServidorChat extends JFrame implements Runnable, ActionListener{
 			e.printStackTrace();
 			
 		}
-		
-	}
-	
-	@Override
-	public void actionPerformed(ActionEvent a) {
-		// TODO Auto-generated method stub
-		
-		jtfPort.setText(""+serverS_SC.getLocalPort());
 		
 	}
 
