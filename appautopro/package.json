@@ -1,10 +1,7 @@
 {
-    "description": "NativeScript Application",
-    "license": "SEE LICENSE IN <your-license-filename>",
-    "readme": "NativeScript Application",
-    "repository": "<fill-your-repository-here>",
+    "description": "Template for starting the NativeScript getting started Groceries tutorial",
     "nativescript": {
-        "id": "org.nativescript.playjs",
+        "id": "org.nativescript.groceriesjs",
         "tns-android": {
             "version": "4.1.2"
         },
@@ -12,12 +9,11 @@
             "version": "4.1.0"
         },
         "playground": {
-            "id": "1123213578.1532217129"
+            "id": "1123213578.1532217129",
+            "usedTutorial": true
         }
     },
-    "scripts": {
-        "lint": "eslint \"app/**/*.js\""
-    },
+    "readme": "NativeScript Application",
     "dependencies": {
         "kinvey-nativescript-sdk": "3.11.1",
         "nativescript-accelerometer": "2.0.1",

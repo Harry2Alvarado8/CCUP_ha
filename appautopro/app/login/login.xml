@@ -1,0 +1,50 @@
+<!--Page loaded="pageLoaded" class="page" actionBarHidden="true" xmlns="http://www.nativescript.org/tns.xsd">
+  <ActionBar title="AUTOPRO"></ActionBar>
+	<FlexboxLayout>
+		<StackLayout class="form">
+	    <Image src="~/images/autoprologo3.png" class="logo" />
+			<TextField id="correo" hint="Correo Electronico" keyboardType="email" autocorrect="false" autocapitalizationType="none" class="input input-border"/>
+			<TextField id="contra" hint="Contraseña" secure="true" class="input input-border" />
+	
+			<Button text="Iniciar Session" class="btn btn-primary" tap="iniciar" />
+			<Button text="Registrame AUTOPRO" tap="registar" />
+		</StackLayout>
+	</FlexboxLayout>
+</Page-->
+<Page loaded="pageLoaded" class="page" actionBarHidden="true" xmlns="http://www.nativescript.org/tns.xsd">
+	<FlexboxLayout class="page">
+		<StackLayout class="form">
+			<Image class="logo" src="~/images/autoprologo3.png" />
+			<Label class="header" text="AUTOPRO" />
+
+			<StackLayout class="input-field">
+				<TextField class="input" text="{{ email }}" hint="Email" keyboardType="email" autocorrect="false" autocapitalizationType="none"
+				 returnKeyType="next" />
+				<Label class="hr-light" />
+			</StackLayout>
+
+			<StackLayout class="input-field">
+				<TextField id="password" class="input" text="{{ password }}" hint="Password" secure="true" returnKeyType="{{ isLoggingIn ? 'done' : 'next' }}"
+				/>
+				<Label class="hr-light" />
+			</StackLayout>
+
+			<StackLayout class="input-field" visibility="{{ !isLoggingIn ? 'visible' : 'collapse' }}">
+				<TextField id="confirmPassword" class="input" text="{{ confirmPassword }}" hint="Confirm password" secure="true" returnKeyType="done"
+				/>
+				<Label class="hr-light" />
+			</StackLayout>
+
+			<Button text="{{ isLoggingIn ? 'Log In' : 'Sign Up' }}" tap="{{ submit }}" class="btn btn-primary m-t-20" />
+			<Label visibility="{{ isLoggingIn ? 'visible' : 'collapse' }}" text="Forgot your password?" class="login-label" tap="{{ forgotPassword }}"
+			/>
+		</StackLayout>
+
+		<Label class="login-label sign-up-label" tap="{{ toggleForm }}">
+			<FormattedString>
+				<Span text="{{ isLoggingIn ? 'Don’t have an account? ' : 'Back to Login' }}" />
+				<Span text="{{ isLoggingIn ? 'Sign up' : '' }}" class="bold" />
+			</FormattedString>
+		</Label>
+	</FlexboxLayout>
+</Page>
