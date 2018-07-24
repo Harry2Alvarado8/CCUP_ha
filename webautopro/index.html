@@ -8,7 +8,7 @@
   
   <link rel='stylesheet prefetch' href='https://fonts.googleapis.com/css?family=Open+Sans:600'>
     <link rel="stylesheet" href="css/style.css">
-
+    <script src="js/script.js"></script>
 </head>
 
 <body>
@@ -21,18 +21,18 @@
 			<div class="sign-in-htm">
 				<div class="group">
 					<label for="user" class="label">Email</label>
-					<input id="user" type="text" class="input">
+					<input id="in_userEmail" type="text" class="input">
 				</div>
 				<div class="group">
 					<label for="pass" class="label">Contraseña</label>
-					<input id="pass" type="password" class="input" data-type="password">
+					<input id="in_pass" type="password" class="input" data-type="password">
 				</div>
 				<div class="group">
 					<input id="check" type="checkbox" class="check" checked>
 					<label for="check"><span class="icon"></span> Keep me Signed in</label>
 				</div>
 				<div class="group">
-					<input type="submit" class="button" value="Sign In">
+					<input type="submit" class="button" id="b_iniciarSession" value="Iniciar Session" onclick="onclick_b_iniciarSession()">
 				</div>
 				<div class="hr"></div>
 				<div class="foot-lnk">
@@ -57,7 +57,7 @@
 					<input id="pass" type="text" class="input">
 				</div>
 				<div class="group">
-					<input type="submit" class="button" value="Sign Up">
+					<input type="submit" class="button" id="b_registrarse" value="Registrase" onclick="onclick_b_registrarme()">
 				</div>
 				<div class="hr"></div>
 				<div class="foot-lnk">
