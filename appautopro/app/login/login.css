@@ -4,7 +4,7 @@ FlexboxLayout {
   justify-content: center;
   align-items: center;
   background-size: contain;
-  background-image: url("~/images/autoprologo1.jpg");
+  background-image: url("~/images/background_auto.jpg");
 }
 StackLayout {
   width: 300;
